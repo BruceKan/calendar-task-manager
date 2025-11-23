@@ -2,7 +2,7 @@
 
 import { create } from "zustand"
 import { persist, createJSONStorage } from "zustand/middleware"
-import type { Task, Project, User, CalendarSettings } from "../types"
+import type { Task, Project, User, CalendarSettings, CheckInRecord } from "../types"
 import { mockTasks, mockProjects, mockUsers } from "../mock-data"
 
 interface CalendarStore {
@@ -11,6 +11,7 @@ interface CalendarStore {
   projects: Project[]
   users: User[]
   currentUser: User
+  checkIns: CheckInRecord[]
 
   // View state
   viewMode: "personal" | "team"
@@ -37,6 +38,10 @@ interface CalendarStore {
   taskEdit: {
     isOpen: boolean
     task: Task | null
+  }
+
+  checkInPanel: {
+    isOpen: boolean
   }
 
   // Settings
@@ -72,6 +77,14 @@ interface CalendarStore {
   openTaskEdit: (task: Task) => void
   closeTaskEdit: () => void
 
+  openCheckInPanel: () => void
+  closeCheckInPanel: () => void
+
+  addCheckIn: (checkIn: CheckInRecord) => void
+  deleteCheckIn: (id: string) => void
+  getCheckInsForDate: (date: Date) => CheckInRecord[]
+  getCheckInsForMonth: (year: number, month: number) => CheckInRecord[]
+
   updateSettings: (settings: Partial<CalendarSettings>) => void
 
   // Helpers
@@ -89,6 +102,7 @@ export const useCalendarStore = create<CalendarStore>()(
       projects: mockProjects,
       users: mockUsers,
       currentUser: mockUsers[0],
+      checkIns: [],
 
       // Initial view state
       viewMode: "personal",
@@ -115,6 +129,10 @@ export const useCalendarStore = create<CalendarStore>()(
       taskEdit: {
         isOpen: false,
         task: null,
+      },
+
+      checkInPanel: {
+        isOpen: false,
       },
 
       // Initial settings
@@ -287,6 +305,55 @@ export const useCalendarStore = create<CalendarStore>()(
       },
     }),
 
+  openCheckInPanel: () =>
+    set({
+      checkInPanel: {
+        isOpen: true,
+      },
+    }),
+
+  closeCheckInPanel: () =>
+    set({
+      checkInPanel: {
+        isOpen: false,
+      },
+    }),
+
+  addCheckIn: (checkIn) =>
+    set((state) => ({
+      checkIns: [...state.checkIns, checkIn],
+    })),
+
+  deleteCheckIn: (id) =>
+    set((state) => ({
+      checkIns: state.checkIns.filter((checkIn) => checkIn.id !== id),
+    })),
+
+  getCheckInsForDate: (date) => {
+    const state = get()
+    return state.checkIns.filter((checkIn) => {
+      const checkInDate = new Date(checkIn.date)
+      return (
+        checkInDate.getFullYear() === date.getFullYear() &&
+        checkInDate.getMonth() === date.getMonth() &&
+        checkInDate.getDate() === date.getDate() &&
+        checkIn.userId === state.currentUser.id
+      )
+    })
+  },
+
+  getCheckInsForMonth: (year, month) => {
+    const state = get()
+    return state.checkIns.filter((checkIn) => {
+      const checkInDate = new Date(checkIn.date)
+      return (
+        checkInDate.getFullYear() === year &&
+        checkInDate.getMonth() === month &&
+        checkIn.userId === state.currentUser.id
+      )
+    })
+  },
+
   updateSettings: (newSettings) =>
     set((state) => ({
       settings: { ...state.settings, ...newSettings },
@@ -344,6 +411,7 @@ export const useCalendarStore = create<CalendarStore>()(
         viewMode: state.viewMode,
         selectedProjectIds: state.selectedProjectIds,
         hideWeekends: state.hideWeekends,
+        checkIns: state.checkIns,
       }),
     }
   )
