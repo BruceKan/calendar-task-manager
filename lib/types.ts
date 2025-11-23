@@ -33,3 +33,20 @@ export interface CalendarSettings {
   rememberLastProject: boolean
   lastSelectedProjectId?: string
 }
+
+export type CheckInCategory = "study" | "work" | "exam" | "exercise" | "reading" | "other"
+
+export interface CheckInRecord {
+  id: string
+  date: Date
+  category: CheckInCategory
+  note?: string
+  userId: string
+}
+
+export interface CheckInCategoryConfig {
+  id: CheckInCategory
+  name: string
+  color: string
+  icon: string
+}
