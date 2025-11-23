@@ -71,7 +71,7 @@ export function CheckInPanel() {
       deleteCheckIn(existingCheckIn.id)
     } else {
       addCheckIn({
-        id: `checkin-${Date.now()}-${Math.random()}`,
+        id: `checkin-${crypto.randomUUID()}`,
         date: dateToCheckIn,
         category,
         userId: currentUser.id,
